@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import handler from '../api/recommend.js';
 
 const ANSWERS = {
-  mood: ['focus'],
-  company: 'alone',
-  place: 'indoor',
-  energy: 'low',
+  mood: ['create'],
+  company: 'clarity',
+  place: 'quiet',
+  energy: 'solo_study',
   budget: 'under30k',
   time: '1to3h',
   note: ''
@@ -66,12 +66,10 @@ test('H-04: 정상 Mock 추천 200', async () => {
 test('H-05: 정상 + previous 3개', async () => {
   process.env.MOCK_AI = 'true';
   delete process.env.VERCEL_ENV;
-  // 첫 번째 요청
   const res1 = await handler.fetch(makeRequest({ answers: ANSWERS }));
   const data1 = await res1.json();
   const prevNames = data1.result.activities.map((a) => ({ name: a.name, vote: 'hot' }));
 
-  // 두 번째 요청
   const res2 = await handler.fetch(makeRequest({ answers: ANSWERS, previous: prevNames }));
   const data2 = await res2.json();
   const newNames = data2.result.activities.map((a) => a.name);

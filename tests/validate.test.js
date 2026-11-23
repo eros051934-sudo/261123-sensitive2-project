@@ -5,10 +5,10 @@ import { buildInput, RESPONSE_SCHEMA } from '../lib/prompt.js';
 import { CATEGORY_LABELS, COST_LABELS, DIFFICULTY_LABELS } from '../public/js/content.js';
 
 const ANSWERS = {
-  mood: ['focus'],
-  company: 'alone',
-  place: 'indoor',
-  energy: 'low',
+  mood: ['create'],
+  company: 'clarity',
+  place: 'quiet',
+  energy: 'solo_study',
   budget: 'under30k',
   time: '1to3h',
   note: ''
@@ -29,13 +29,13 @@ test('U-02: mood 빈 배열', () => {
 });
 
 test('U-03: mood 3개 선택', () => {
-  const res = validateRequest({ answers: { ...ANSWERS, mood: ['focus', 'rest', 'learn'] } });
+  const res = validateRequest({ answers: { ...ANSWERS, mood: ['create', 'analyze', 'connect'] } });
   assert.equal(res.ok, false);
   assert.equal(res.code, 'INVALID_ANSWERS');
 });
 
 test('U-04: mood 중복 선택', () => {
-  const res = validateRequest({ answers: { ...ANSWERS, mood: ['focus', 'focus'] } });
+  const res = validateRequest({ answers: { ...ANSWERS, mood: ['create', 'create'] } });
   assert.equal(res.ok, false);
   assert.equal(res.code, 'INVALID_ANSWERS');
 });
@@ -92,37 +92,37 @@ test('U-12: 본문 null 또는 answers 없음', () => {
 // 2-2. AI 응답 정리 N
 const RAW = {
   profile: {
-    typeName: '조용한 몰입 탐험가',
-    summary: '혼자 손을 움직이며 집중할 때 에너지가 차오르는 타입이에요.',
-    keywords: ['몰입', '혼자', '손으로']
+    typeName: '잠재력 탐색 빌더',
+    summary: '나만의 강점과 가치를 발견하고 작은 실험을 통해 다음 방향을 설계하는 탐험가예요.',
+    keywords: ['방향탐색', '실행력', '잠재력']
   },
   activities: [
     {
-      name: '뜨개질 컵받침 만들기',
-      category: 'make',
+      name: '관심 직무 1:1 커피챗 인터뷰',
+      category: 'social',
       cost: 'under30k',
       difficulty: 'easy',
-      reason: '혼자 조용히 손을 움직이며 집중할 수 있어요.',
-      steps: { today: '사슬뜨기 연습하기', thisWeek: '작은 사각형 완성하기', twoWeeks: '완성하기' },
-      tip: '손에 힘을 빼세요.'
+      reason: '해당 직무가 내 기대와 맞는지 빠르게 검증할 수 있어요.',
+      steps: { today: '현직자 프로필 찾아보기', thisWeek: '질문지 작성하기', twoWeeks: '커피챗 진행하기' },
+      tip: '구체적인 질문지를 준비하세요.'
     },
     {
-      name: '필름 감성 사진 산책',
-      category: 'culture',
+      name: '1페이지 노코드 웹사이트 제작',
+      category: 'make',
       cost: 'free',
-      difficulty: 'easy',
-      reason: '빛과 그림자를 담아보세요.',
-      steps: { today: '창밖 3장 찍기', thisWeek: '동네 10장 찍기', twoWeeks: '앨범 만들기' },
+      difficulty: 'normal',
+      reason: '코딩 없이 내 아이디어를 실제 웹으로 구현해 봐요.',
+      steps: { today: '템플릿 구경하기', thisWeek: '레이아웃 잡기', twoWeeks: '주소 발행하기' },
       tip: ''
     },
     {
-      name: '도서관 서가 탐험',
+      name: '산업 트렌드 뉴스레터 스크랩',
       category: 'learn',
       cost: 'free',
       difficulty: 'easy',
-      reason: '평화로운 공간에서 책을 만나요.',
-      steps: { today: '도서관 알아보기', thisWeek: '책 한 권 빌리기', twoWeeks: '끝까지 읽기' },
-      tip: '제목만 훑어봐도 좋아요.'
+      reason: '관심 분야의 흐름을 정리하며 시각을 넓혀요.',
+      steps: { today: '뉴스레터 구독하기', thisWeek: '기사 1개 요약하기', twoWeeks: '아티클 발행하기' },
+      tip: '헤드라인 위주로 읽으세요.'
     }
   ],
   wellbeingConcern: false
@@ -133,7 +133,7 @@ test('N-01: RAW 정리 성공', () => {
   assert.ok(res);
   assert.equal(res.activities.length, 3);
   assert.equal(res.activities[0].id, 'a1');
-  assert.equal(res.activities[0].categoryLabel, CATEGORY_LABELS.make);
+  assert.equal(res.activities[0].categoryLabel, CATEGORY_LABELS.social);
   assert.equal(res.activities[0].costLabel, COST_LABELS.under30k);
   assert.equal(res.activities[0].difficultyLabel, DIFFICULTY_LABELS.easy);
 });
@@ -157,8 +157,8 @@ test('N-03: 활동 1개 category sleep', () => {
 });
 
 test('N-04: previous 뜨 개 질 과 공백 빼고 중복', () => {
-  const res = normalizeAiResult(RAW, [{ name: '뜨 개 질 컵받침 만들기', vote: 'hot' }]);
-  assert.equal(res, null); // 1개 제외되어 2개뿐이므로 null
+  const res = normalizeAiResult(RAW, [{ name: '관 심 직 무 1:1 커피챗 인터뷰', vote: 'hot' }]);
+  assert.equal(res, null);
 });
 
 test('N-05: 같은 이름 활동 2개 + 다른 2개', () => {
@@ -242,7 +242,7 @@ test('P-01: buildInput 태그 탈출', () => {
 
 test('P-02: buildInput 기본 확인', () => {
   const input = buildInput({ answers: ANSWERS, previous: [] });
-  assert.ok(input.includes('한 달 예산: 3만 원 이하 (코드: under30k)'));
+  assert.ok(input.includes('예산: 3만 원 이하 (책, 소도구, 커피챗) (코드: under30k)'));
   assert.ok(input.includes('<note>\n없음\n</note>'));
 });
 
