@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>해볼까 — 하고 싶은 걸 찾고, 오늘 바로 시작하기</title>
+  <meta name="description" content="1분 질문으로 나에게 맞는 활동을 찾고, 첫 걸음을 캘린더에 넣어주는 서비스">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="/css/fonts.css">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body data-theme="dark">
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="logo" href="/" aria-label="해볼까 처음으로">
+        <span class="logo__mark" aria-hidden="true">?</span>
+        <span class="logo__text">해볼까</span>
+      </a>
+      <span class="site-header__tag">하고 싶은 걸 찾는 1분</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 1. 시작 -->
+    <section id="view-intro" class="view view--narrow" aria-labelledby="intro-title">
+      <h1 id="intro-title" class="intro__title" tabindex="-1">뭐라도 해보고 싶은데, 뭘 할지 모르겠다면</h1>
+      <p class="intro__lead">1분 질문에 답하면 나에게 맞는 활동 3가지를 찾아드려요. 마음에 드는 걸 고르면 오늘 바로 시작할 첫 걸음까지 캘린더에 넣어드릴게요.</p>
+      <ol class="card intro-steps">
+        <li><strong>1분 질문</strong> 요즘 기분, 예산, 시간을 탭으로 골라요.</li>
+        <li><strong>나의 해볼까 유형</strong> 나에게 맞는 활동 3가지를 받아요.</li>
+        <li><strong>첫 걸음 캘린더 등록</strong> 고른 활동을 작게 쪼개 일정에 넣어요.</li>
+      </ol>
+      <button id="start-button" type="button" class="btn btn--primary btn--pill btn--block">1분 만에 찾아보기</button>
+      <p class="caption">답변은 저장되지 않으며, 추천을 위해 OpenAI로 전송돼요.</p>
+    </section>
+
+    <!-- 2. 질문 -->
+    <section id="view-quiz" class="view view--narrow" aria-labelledby="quiz-title" hidden>
+      <form id="quiz-form" class="card quiz" novalidate>
+        <div class="quiz__top">
+          <span id="quiz-step" class="step-pill">1 / 7</span>
+          <div id="quiz-progress" class="progress" role="progressbar" aria-label="질문 진행" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1">
+            <span id="quiz-progress-fill" class="progress__fill"></span>
+          </div>
+        </div>
+        <fieldset class="quiz__fieldset">
+          <legend><h2 id="quiz-title" class="quiz__title" tabindex="-1"></h2></legend>
+          <p id="quiz-hint" class="caption"></p>
+          <div id="quiz-options" class="options"></div>
+          <div id="quiz-note-field" class="note-field" hidden>
+            <textarea id="quiz-note" class="textarea" rows="4" aria-labelledby="quiz-title" aria-describedby="quiz-hint note-count note-error"></textarea>
+            <p id="note-count" class="counter">0 / 300자</p>
+            <p id="note-error" class="field-error" hidden></p>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button id="quiz-prev" type="button" class="btn btn--secondary">이전</button>
+          <button id="quiz-next" type="submit" class="btn btn--primary">다음</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 3. 로딩 -->
+    <section id="view-loading" class="view view--narrow" aria-labelledby="loading-title" hidden>
+      <div class="card loading">
+        <span class="spinner spinner--lg" aria-hidden="true"></span>
+        <h2 id="loading-title" class="loading__title" tabindex="-1">나에게 맞는 걸 찾고 있어요…</h2>
+        <p id="loading-message" class="loading__message"></p>
+      </div>
+    </section>
+
+    <!-- 4. 오류 (첫 추천 실패) -->
+    <section id="view-error" class="view view--narrow" aria-labelledby="error-title" hidden>
+      <div class="error-banner" role="alert">
+        <span class="error-banner__icon" aria-hidden="true">!</span>
+        <div>
+          <h2 id="error-title" class="error-banner__title" tabindex="-1">추천을 만들지 못했어요</h2>
+          <p id="error-message" class="error-banner__message"></p>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="error-edit" type="button" class="btn btn--secondary">답변 고치기</button>
+        <button id="error-retry" type="button" class="btn btn--primary">다시 시도</button>
+      </div>
+    </section>
+
+    <!-- 5. 결과 -->
+    <section id="view-result" class="view" aria-labelledby="result-title" hidden>
+      <h2 id="result-title" class="view__title" tabindex="-1">나에게 맞는 활동을 찾았어요</h2>
+      <div id="mock-badge" class="badge badge--filled" hidden>테스트 모드</div>
+
+      <aside id="wellbeing-notice" class="card wellbeing" aria-labelledby="wellbeing-title" hidden>
+        <h3 id="wellbeing-title" class="card__title">요즘 많이 지치셨나요?</h3>
+        <p>혼자 견디지 않아도 괜찮아요. 자살예방 상담전화 <a href="tel:109">109</a>, 정신건강 위기상담전화 <a href="tel:15770199">1577-0199</a>에서 24시간 이야기를 들어드려요.</p>
+      </aside>
+
+      <div class="result-layout">
+        <article id="type-card" class="type-card" aria-labelledby="type-name">
+          <span class="badge badge--featured">나의 해볼까 유형</span>
+          <h3 id="type-name" class="type-card__name"></h3>
+          <p id="type-summary" class="type-card__summary"></p>
+          <ul id="type-keywords" class="type-card__keywords"></ul>
+        </article>
+
+        <div class="result-feed">
+          <p id="more-loading" class="more-loading" hidden><span class="spinner" aria-hidden="true"></span>새로운 활동을 찾고 있어요…</p>
+          <div id="result-inline-error" class="error-banner" role="alert" hidden>
+            <span class="error-banner__icon" aria-hidden="true">!</span>
+            <div>
+              <p class="error-banner__title">다른 추천을 가져오지 못했어요</p>
+              <p id="result-inline-message" class="error-banner__message"></p>
+              <button id="result-retry" type="button" class="btn btn--secondary">다시 시도</button>
+            </div>
+          </div>
+          <ul id="activity-list" class="activity-list"></ul>
+        </div>
+
+        <div id="result-actions" class="card result-actions">
+          <button id="more-button" type="button" class="btn btn--secondary btn--block">다른 추천 받기</button>
+          <button id="copy-result-button" type="button" class="btn btn--secondary btn--block">결과 복사하기</button>
+          <button id="restart-button" type="button" class="btn btn--text">처음부터 다시</button>
+          <p id="copy-result-status" class="copy-status" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <!-- 추천 카드 틀 (JS가 복제해서 textContent로 채움) -->
+      <template id="activity-template">
+        <li class="activity-card" data-vote="none">
+          <div class="activity-card__badges">
+            <span class="badge badge--filled js-category"></span>
+            <span class="badge badge--filled js-difficulty"></span>
+          </div>
+          <h3 class="activity-card__name js-name"></h3>
+          <p class="cost"><span class="cost__caption">첫 달 예상 비용</span> <span class="cost__value js-cost"></span></p>
+          <p class="activity-card__reason js-reason"></p>
+          <div class="first-step">
+            <p class="first-step__label">오늘의 첫 걸음</p>
+            <p class="first-step__text js-today"></p>
+          </div>
+          <p class="activity-card__tip js-tip"></p>
+          <div class="activity-card__foot">
+            <div class="vote" role="group" aria-label="이 활동, 끌리나요?">
+              <button type="button" class="vote__btn vote__btn--down js-vote-down" aria-pressed="false">▼ 별로예요</button>
+              <button type="button" class="vote__btn vote__btn--up js-vote-up" aria-pressed="false">▲ 끌려요</button>
+            </div>
+            <button type="button" class="btn btn--primary js-choose">이걸로 해볼래요</button>
+          </div>
+        </li>
+      </template>
+    </section>
+
+    <!-- 6. 계획 -->
+    <section id="view-plan" class="view view--narrow" aria-labelledby="plan-title" hidden>
+      <button id="plan-back" type="button" class="btn btn--text">← 다른 활동 보기</button>
+      <h2 id="plan-title" class="view__title" tabindex="-1"></h2>
+      <p class="plan__lead">완벽하게 말고, 일단 오늘 10분만 해봐요.</p>
+
+      <div class="card">
+        <h3 class="card__title">첫 걸음 3단계</h3>
+        <ol id="plan-steps" class="checklist"></ol>
+        <p id="plan-tip" class="activity-card__tip"></p>
+        <p class="caption">체크 표시는 저장되지 않아요.</p>
+      </div>
+
+      <div class="card">
+        <h3 class="card__title">언제 시작할까요?</h3>
+        <div class="datetime">
+          <label class="field"><span class="field__label">날짜</span><input id="plan-date" class="input" type="date" aria-describedby="plan-time-error"></label>
+          <label class="field"><span class="field__label">시간</span><input id="plan-time" class="input" type="time" step="600" aria-describedby="plan-time-error"></label>
+        </div>
+        <p id="plan-time-error" class="field-error" hidden></p>
+        <div class="plan-actions">
+          <button id="ics-button" type="button" class="btn btn--primary btn--pill btn--block">캘린더 파일 받기</button>
+          <a id="gcal-link" class="btn btn--secondary btn--block" href="#" target="_blank" rel="noopener noreferrer">Google 캘린더에 추가</a>
+        </div>
+        <p class="caption">아이폰은 '캘린더 파일 받기', 갤럭시·PC는 'Google 캘린더에 추가'가 편해요. 일정 30분 전에 알림이 와요.</p>
+      </div>
+
+      <div class="card">
+        <button id="copy-plan-button" type="button" class="btn btn--secondary btn--block">계획 복사하기</button>
+        <p id="copy-plan-status" class="copy-status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <p id="sr-status" class="visually-hidden" aria-live="polite"></p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="site-footer__text">© 2026 해볼까 · 답변은 저장되지 않으며, 추천을 위해 OpenAI로 전송돼요. 추천은 AI가 만든 아이디어예요. 실제 장소·가격·안전은 직접 확인해 주세요.</p>
+    </div>
+  </footer>
+</body>
+</html>
