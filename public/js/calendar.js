@@ -38,10 +38,19 @@ export function foldIcsLine(line) {
   return parts.join('\r\n ');
 }
 
-export function buildEventText({ name, steps }) {
+// discover(확인할 것)·nextIf(잘 맞으면 다음 단계)는 있을 때만 메모에 넣음
+export function buildEventText({ name, steps, discover = '', nextIf = '' }) {
+  const lines = [
+    `오늘: ${steps.today}`,
+    `이번 주: ${steps.thisWeek}`,
+    `2주 안: ${steps.twoWeeks}`,
+  ];
+  if (discover) lines.push('', `확인할 것: ${discover}`);
+  if (nextIf) lines.push('', `다음 단계: ${nextIf}`);
+  lines.push('', '완벽하게 말고, 일단 10분만 해봐요.');
   return {
     title: `[해볼까] ${name} 해보기`,
-    details: `오늘: ${steps.today}\n이번 주: ${steps.thisWeek}\n2주 안: ${steps.twoWeeks}\n\n완벽하게 말고, 일단 10분만 해봐요.`,
+    details: lines.join('\n'),
   };
 }
 
@@ -90,11 +99,19 @@ export function buildResultText({ profile, activities, origin = '' }) {
   const lines = [
     `[해볼까] 나의 유형: ${profile.typeName}`,
     profile.summary,
-    '',
-    '추천 활동'
   ];
+  if (profile.direction) {
+    lines.push('', '나에게 맞는 방향', profile.direction);
+  }
+  if (Array.isArray(profile.fields) && profile.fields.length > 0) {
+    lines.push('', '눈여겨볼 분야');
+    profile.fields.forEach((f) => lines.push(`- ${f.name}: ${f.why}`));
+  }
+  lines.push('', '추천 경험');
   activities.forEach((act, idx) => {
-    lines.push(`${idx + 1}. ${act.name} (${act.categoryLabel} · ${act.costLabel})`);
+    const track = act.trackLabel ? `${act.trackLabel} · ` : '';
+    lines.push(`${idx + 1}. ${act.name} (${track}${act.categoryLabel} · ${act.costLabel})`);
+    if (act.discover) lines.push(`   해보면 알 수 있는 것: ${act.discover}`);
     lines.push(`   오늘의 첫 걸음: ${act.steps.today}`);
   });
   if (origin) {
@@ -104,7 +121,7 @@ export function buildResultText({ profile, activities, origin = '' }) {
   return lines.join('\n');
 }
 
-export function buildPlanText({ name, steps, date = null }) {
+export function buildPlanText({ name, steps, date = null, discover = '', nextIf = '' }) {
   const lines = [`[해볼까] ${name} 해보기`];
   if (date instanceof Date && !isNaN(date.getTime())) {
     const formatted = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
@@ -113,5 +130,7 @@ export function buildPlanText({ name, steps, date = null }) {
   lines.push(`1) 오늘: ${steps.today}`);
   lines.push(`2) 이번 주: ${steps.thisWeek}`);
   lines.push(`3) 2주 안: ${steps.twoWeeks}`);
+  if (discover) lines.push(`확인할 것: ${discover}`);
+  if (nextIf) lines.push(`다음 단계: ${nextIf}`);
   return lines.join('\n');
 }

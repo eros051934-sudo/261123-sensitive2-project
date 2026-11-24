@@ -27,41 +27,68 @@
 ### 2-1. 질문 화면 (모든 너비 공통, 640px 칸)
 ```
 ┌──────────────────────────────────────┐
-│ [3 / 7]  ████████░░░░░░░░░░░░         │ ← 단계 알약 + 진행 막대(노랑)
-│ 몸은 얼마나 쓰고 싶어요?                 │ ← heading-lg
-│ 하나만 골라 주세요.                      │ ← caption
-│ [거의 안 움직이고 싶어요] [가볍게 …] [땀 …] │ ← 선택지 (8px 모서리, Q1은 2줄 타일)
+│ [4 / 11]  ██████░░░░░░░░░░░░░░        │ ← 단계 알약 + 진행 막대(노랑)
+│ 주변에서 자주 듣는 말에 가장 가까운 건?    │ ← heading-lg
+│ 딱 맞지 않아도 괜찮아요. …              │ ← caption
+│ [꼼꼼하고 정리를 잘한다            ✓]   │ ← 칩: 한 줄에 하나, 너비 꽉 채움
+│ [아이디어가 많고 새롭다              ]   │
+│ …                                     │   (몰입 순간 질문만 2줄 타일, 768px 이상 2열)
 │                    ( 이전 ) (  다음  )   │
 └──────────────────────────────────────┘
 ```
 
 ### 2-2. 결과 화면 — 768px 이상 (Binance 메인 패널 + 사이드 레일)
 ```
- 나에게 맞는 활동을 찾았어요
+ 나에게 맞는 방향을 찾았어요
 ┌ 마음 건강 안내 (조건부, 전체 폭) ──────────────────────────────┐
 ┌───────────────────────────────────┐ ┌──────────────────────┐
-│ [만들기] [바로 시작]                 │ │▔ 유형 카드 (노랑 윗띠)  │
-│ 뜨개질 컵받침 만들기                  │ │ [나의 해볼까 유형]     │
-│ 첫 달 예상 비용  3만 원 이하(노랑)     │ │ 조용한 몰입 탐험가(노랑)│
-│ 맞는 이유 …                         │ │ 한 줄 설명 …          │
-│ ┌ 오늘의 첫 걸음 ────────────────┐   │ │ #몰입 #혼자 #손으로    │
-│ └──────────────────────────────┘   │ └──────────────────────┘
-│ 팁 · …                              │ ┌──────────────────────┐
-│ (▼ 별로예요|▲ 끌려요)  [이걸로 해볼래요] │ │ [다른 추천 받기]        │
-└───────────────────────────────────┘ │ (결과 복사하기)        │
-  … 카드 2, 카드 3                      │ (처음부터 다시)        │
-                                       └──────────────────────┘
+│▌나에게 맞는 방향 (노랑 왼쪽 띠)        │ │▔ 유형 카드 (노랑 윗띠)  │
+│ 왜 이 방향인지 2~3문장 …              │ │ [나의 잠재력 나침반]    │
+│ 눈여겨볼 분야                         │ │ 구조를 세우는 …(노랑)  │
+│ [서비스 기획][콘텐츠 기획][데이터 분석] │ │ 한 줄 설명 …          │
+└───────────────────────────────────┘ │ #구조화 #실행력 …      │
+┌───────────────────────────────────┐ └──────────────────────┘
+│ [진로 탐색] [네트워킹·…] [가벼운 첫 걸음]│ ┌──────────────────────┐
+│ 관심 직무 1:1 커피챗 인터뷰            │ │ [다른 방향 추천 받기]   │
+│ 시작 예상 비용  3만 원 이하(노랑)       │ │ (진단 결과 복사하기)    │
+│ 추천 이유 …                          │ │ (처음부터 다시)        │
+│ ▌해보면 알 수 있는 것 …               │ └──────────────────────┘
+│ ┌ 오늘의 첫 걸음 (10분) ──────────┐   │
+│ └──────────────────────────────┘   │
+│ 팁 · …                              │
+│ (▼ 별로예요|▲ 끌려요) [이걸로 시도해볼래요]│
+└───────────────────────────────────┘
+  … 카드 2, 카드 3
 ```
-- 768px 미만: 위에서 아래로 **유형 카드 → 추천 카드 3개 → 버튼 묶음** 1열.
+- 768px 미만: 위에서 아래로 **유형 카드 → 방향 카드 → 추천 카드 3개 → 버튼 묶음** 1열.
 - 구현: `.result-layout`은 모바일에서 세로 flex(간격 `--space-sm`). 768px 이상에서 `display: grid; grid-template-columns: minmax(0, 1fr) var(--sidebar-width);` 그리고:
   - `#type-card`: `grid-column: 2; grid-row: 1;`
   - `#result-actions`: `grid-column: 2; grid-row: 2;`
-  - `.result-feed`: `grid-column: 1; grid-row: 1 / span 3;`
+  - `.result-feed`(방향 카드 + 추천 카드 목록): `grid-column: 1; grid-row: 1 / span 3;` 세로 flex 간격 `--space-md`
   - `grid-template-rows: auto auto 1fr; gap: var(--space-lg); align-items: start;`
+
+### 2-3. 계획 화면 (밝은 테마, 640px 칸)
+```
+← 다른 방향 보기
+{활동 이름}, 이렇게 시작해요
+완벽한 확신보다, 일단 오늘 10분의 …
+┌▌이 경험으로 확인할 것 ─────────────┐
+│ {discover}                        │
+└───────────────────────────────────┘
+┌ 실천 3단계 로드맵 ─────────────────┐
+│ [□ 오늘 (10분) …] [□ 이번 주 …] [□ 2주 안 …] │
+│ ┊→ 잘 맞는다면, 그다음엔  {nextIf}  ┊│ ← 점선 상자
+│ 팁 · … / 체크 표시는 저장되지 않아요. │
+└───────────────────────────────────┘
+┌ 언제 첫 발을 내딛을까요? … 캘린더 버튼 ┐
+┌ 실행 계획 복사하기 ─────────────────┐
+```
 
 ---
 
 ## 3. HTML 구조 (`public/index.html`)
+
+아래가 `public/index.html` 전체입니다. `id`와 `js-*` 클래스는 `app.js`가 찾으므로 바꾸지 않습니다 (`AGENTS.md` X-12).
 
 ```html
 <!doctype html>
@@ -69,8 +96,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>해볼까 — 하고 싶은 걸 찾고, 오늘 바로 시작하기</title>
-  <meta name="description" content="1분 질문으로 나에게 맞는 활동을 찾고, 첫 걸음을 캘린더에 넣어주는 서비스">
+  <title>해볼까 — 내가 좋아하는 것과 다음 방향을 찾는 2분</title>
+  <meta name="description" content="취미든 앞으로의 일이든, 내가 뭘 좋아하는지 아직 모르겠는 사람을 위한 2분 자기 탐색. 나에게 맞는 방향과 직접 해볼 경험 3가지를 알려드려요.">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="/css/fonts.css">
   <link rel="stylesheet" href="/css/tokens.css">
@@ -84,30 +111,30 @@
         <span class="logo__mark" aria-hidden="true">?</span>
         <span class="logo__text">해볼까</span>
       </a>
-      <span class="site-header__tag">하고 싶은 걸 찾는 1분</span>
+      <span class="site-header__tag">나만의 방향을 찾는 2분</span>
     </div>
   </header>
 
   <main class="container">
     <!-- 1. 시작 -->
     <section id="view-intro" class="view view--narrow" aria-labelledby="intro-title">
-      <h1 id="intro-title" class="intro__title" tabindex="-1">뭐라도 해보고 싶은데, 뭘 할지 모르겠다면</h1>
-      <p class="intro__lead">1분 질문에 답하면 나에게 맞는 활동 3가지를 찾아드려요. 마음에 드는 걸 고르면 오늘 바로 시작할 첫 걸음까지 캘린더에 넣어드릴게요.</p>
+      <h1 id="intro-title" class="intro__title" tabindex="-1">내가 뭘 좋아하는지, 앞으로 뭘 해야 할지 아직 모르겠다면</h1>
+      <p class="intro__lead">괜찮아요, 처음부터 답을 아는 사람은 없어요. 2분 질문으로 나를 알아본 뒤, 취미든 진로든 지금 나에게 맞는 방향과 그 방향을 직접 확인해 볼 경험 3가지, 그리고 어떻게 시작하면 되는지까지 알려드릴게요.</p>
       <ol class="card intro-steps">
-        <li><strong>1분 질문</strong> 요즘 기분, 예산, 시간을 탭으로 골라요.</li>
-        <li><strong>나의 해볼까 유형</strong> 나에게 맞는 활동 3가지를 받아요.</li>
-        <li><strong>첫 걸음 캘린더 등록</strong> 고른 활동을 작게 쪼개 일정에 넣어요.</li>
+        <li><strong>2분 동안 나를 알아보기</strong> 몰입하는 순간, 자주 듣는 강점, 금방 지치는 상황을 골라요.</li>
+        <li><strong>나에게 맞는 방향 설명</strong> 왜 이 방향인지, 눈여겨볼 분야는 무엇인지 알려드려요.</li>
+        <li><strong>경험으로 확인하기</strong> 추천 경험의 첫 걸음을 캘린더에 넣고, 잘 맞으면 다음 단계로 넘어가요.</li>
       </ol>
-      <button id="start-button" type="button" class="btn btn--primary btn--pill btn--block">1분 만에 찾아보기</button>
-      <p class="caption">답변은 저장되지 않으며, 추천을 위해 OpenAI로 전송돼요.</p>
+      <button id="start-button" type="button" class="btn btn--primary btn--pill btn--block">2분 만에 내 방향 찾아보기</button>
+      <p class="caption">답변은 저장되지 않으며, 맞춤 추천을 위해 OpenAI로 전송돼요.</p>
     </section>
 
     <!-- 2. 질문 -->
     <section id="view-quiz" class="view view--narrow" aria-labelledby="quiz-title" hidden>
       <form id="quiz-form" class="card quiz" novalidate>
         <div class="quiz__top">
-          <span id="quiz-step" class="step-pill">1 / 7</span>
-          <div id="quiz-progress" class="progress" role="progressbar" aria-label="질문 진행" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1">
+          <span id="quiz-step" class="step-pill">1 / 11</span>
+          <div id="quiz-progress" class="progress" role="progressbar" aria-label="질문 진행" aria-valuemin="1" aria-valuemax="11" aria-valuenow="1">
             <span id="quiz-progress-fill" class="progress__fill"></span>
           </div>
         </div>
@@ -132,7 +159,7 @@
     <section id="view-loading" class="view view--narrow" aria-labelledby="loading-title" hidden>
       <div class="card loading">
         <span class="spinner spinner--lg" aria-hidden="true"></span>
-        <h2 id="loading-title" class="loading__title" tabindex="-1">나에게 맞는 걸 찾고 있어요…</h2>
+        <h2 id="loading-title" class="loading__title" tabindex="-1">나에게 맞는 방향을 찾고 있어요…</h2>
         <p id="loading-message" class="loading__message"></p>
       </div>
     </section>
@@ -154,7 +181,7 @@
 
     <!-- 5. 결과 -->
     <section id="view-result" class="view" aria-labelledby="result-title" hidden>
-      <h2 id="result-title" class="view__title" tabindex="-1">나에게 맞는 활동을 찾았어요</h2>
+      <h2 id="result-title" class="view__title" tabindex="-1">나에게 맞는 방향을 찾았어요</h2>
       <div id="mock-badge" class="badge badge--filled" hidden>테스트 모드</div>
 
       <aside id="wellbeing-notice" class="card wellbeing" aria-labelledby="wellbeing-title" hidden>
@@ -164,14 +191,23 @@
 
       <div class="result-layout">
         <article id="type-card" class="type-card" aria-labelledby="type-name">
-          <span class="badge badge--featured">나의 해볼까 유형</span>
+          <span class="badge badge--featured">나의 잠재력 나침반</span>
           <h3 id="type-name" class="type-card__name"></h3>
           <p id="type-summary" class="type-card__summary"></p>
           <ul id="type-keywords" class="type-card__keywords"></ul>
         </article>
 
         <div class="result-feed">
-          <p id="more-loading" class="more-loading" hidden><span class="spinner" aria-hidden="true"></span>새로운 활동을 찾고 있어요…</p>
+          <section id="direction-card" class="card direction" aria-labelledby="direction-title">
+            <h3 id="direction-title" class="card__title">나에게 맞는 방향</h3>
+            <p id="direction-text" class="direction__text"></p>
+            <div id="direction-fields-wrap" class="direction__fields-wrap">
+              <h4 class="direction__subtitle">눈여겨볼 분야</h4>
+              <ul id="direction-fields" class="direction__fields"></ul>
+            </div>
+            <p class="caption">아래 경험 3가지로 이 방향이 나에게 맞는지 하나씩 확인해 봐요.</p>
+          </section>
+          <p id="more-loading" class="more-loading" hidden><span class="spinner" aria-hidden="true"></span>새로운 방향을 찾고 있어요…</p>
           <div id="result-inline-error" class="error-banner" role="alert" hidden>
             <span class="error-banner__icon" aria-hidden="true">!</span>
             <div>
@@ -184,8 +220,8 @@
         </div>
 
         <div id="result-actions" class="card result-actions">
-          <button id="more-button" type="button" class="btn btn--secondary btn--block">다른 추천 받기</button>
-          <button id="copy-result-button" type="button" class="btn btn--secondary btn--block">결과 복사하기</button>
+          <button id="more-button" type="button" class="btn btn--secondary btn--block">다른 방향 추천 받기</button>
+          <button id="copy-result-button" type="button" class="btn btn--secondary btn--block">진단 결과 복사하기</button>
           <button id="restart-button" type="button" class="btn btn--text">처음부터 다시</button>
           <p id="copy-result-status" class="copy-status" aria-live="polite"></p>
         </div>
@@ -195,23 +231,28 @@
       <template id="activity-template">
         <li class="activity-card" data-vote="none">
           <div class="activity-card__badges">
+            <span class="badge badge--featured js-track"></span>
             <span class="badge badge--filled js-category"></span>
             <span class="badge badge--filled js-difficulty"></span>
           </div>
           <h3 class="activity-card__name js-name"></h3>
-          <p class="cost"><span class="cost__caption">첫 달 예상 비용</span> <span class="cost__value js-cost"></span></p>
+          <p class="cost"><span class="cost__caption">시작 예상 비용</span> <span class="cost__value js-cost"></span></p>
           <p class="activity-card__reason js-reason"></p>
+          <div class="discover">
+            <p class="discover__label">해보면 알 수 있는 것</p>
+            <p class="discover__text js-discover"></p>
+          </div>
           <div class="first-step">
-            <p class="first-step__label">오늘의 첫 걸음</p>
+            <p class="first-step__label">오늘의 첫 걸음 (10분)</p>
             <p class="first-step__text js-today"></p>
           </div>
           <p class="activity-card__tip js-tip"></p>
           <div class="activity-card__foot">
-            <div class="vote" role="group" aria-label="이 활동, 끌리나요?">
+            <div class="vote" role="group" aria-label="이 방향, 끌리나요?">
               <button type="button" class="vote__btn vote__btn--down js-vote-down" aria-pressed="false">▼ 별로예요</button>
               <button type="button" class="vote__btn vote__btn--up js-vote-up" aria-pressed="false">▲ 끌려요</button>
             </div>
-            <button type="button" class="btn btn--primary js-choose">이걸로 해볼래요</button>
+            <button type="button" class="btn btn--primary js-choose">이걸로 시도해볼래요</button>
           </div>
         </li>
       </template>
@@ -219,19 +260,28 @@
 
     <!-- 6. 계획 -->
     <section id="view-plan" class="view view--narrow" aria-labelledby="plan-title" hidden>
-      <button id="plan-back" type="button" class="btn btn--text">← 다른 활동 보기</button>
+      <button id="plan-back" type="button" class="btn btn--text">← 다른 방향 보기</button>
       <h2 id="plan-title" class="view__title" tabindex="-1"></h2>
-      <p class="plan__lead">완벽하게 말고, 일단 오늘 10분만 해봐요.</p>
+      <p class="plan__lead">완벽한 확신보다, 일단 오늘 10분의 작은 행동으로 내 마음을 확인해 봐요.</p>
+
+      <div class="card plan-discover">
+        <h3 class="card__title">이 경험으로 확인할 것</h3>
+        <p id="plan-discover" class="plan-discover__text"></p>
+      </div>
 
       <div class="card">
-        <h3 class="card__title">첫 걸음 3단계</h3>
+        <h3 class="card__title">실천 3단계 로드맵</h3>
         <ol id="plan-steps" class="checklist"></ol>
+        <div class="next-step">
+          <p class="next-step__label">잘 맞는다면, 그다음엔</p>
+          <p id="plan-next" class="next-step__text"></p>
+        </div>
         <p id="plan-tip" class="activity-card__tip"></p>
         <p class="caption">체크 표시는 저장되지 않아요.</p>
       </div>
 
       <div class="card">
-        <h3 class="card__title">언제 시작할까요?</h3>
+        <h3 class="card__title">언제 첫 발을 내딛을까요?</h3>
         <div class="datetime">
           <label class="field"><span class="field__label">날짜</span><input id="plan-date" class="input" type="date" aria-describedby="plan-time-error"></label>
           <label class="field"><span class="field__label">시간</span><input id="plan-time" class="input" type="time" step="600" aria-describedby="plan-time-error"></label>
@@ -241,11 +291,11 @@
           <button id="ics-button" type="button" class="btn btn--primary btn--pill btn--block">캘린더 파일 받기</button>
           <a id="gcal-link" class="btn btn--secondary btn--block" href="#" target="_blank" rel="noopener noreferrer">Google 캘린더에 추가</a>
         </div>
-        <p class="caption">아이폰은 '캘린더 파일 받기', 갤럭시·PC는 'Google 캘린더에 추가'가 편해요. 일정 30분 전에 알림이 와요.</p>
+        <p class="caption">일정에 등록해두면 30분 전에 알림을 받아 작은 도전을 잊지 않고 실천할 수 있어요.</p>
       </div>
 
       <div class="card">
-        <button id="copy-plan-button" type="button" class="btn btn--secondary btn--block">계획 복사하기</button>
+        <button id="copy-plan-button" type="button" class="btn btn--secondary btn--block">실행 계획 복사하기</button>
         <p id="copy-plan-status" class="copy-status" aria-live="polite"></p>
       </div>
     </section>
@@ -255,7 +305,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p class="site-footer__text">© 2026 해볼까 · 답변은 저장되지 않으며, 추천을 위해 OpenAI로 전송돼요. 추천은 AI가 만든 아이디어예요. 실제 장소·가격·안전은 직접 확인해 주세요.</p>
+      <p class="site-footer__text">© 2026 해볼까 · 답변은 서버에 저장되지 않으며, 맞춤 추천을 위해 OpenAI로 전송돼요. 추천 내용은 나를 발견하기 위한 안내 아이디어입니다.</p>
     </div>
   </footer>
 </body>
@@ -290,9 +340,9 @@
 | 진행 막대 `.progress` | 높이 4px, 트랙 `--bg-raised`, `--radius-pill`, `flex: 1`. `.progress__fill` 배경 `--accent`, 너비 JS, `transition: width 0.3s` |
 | 선택지 공통 | 실제 `input`(radio/checkbox)은 `.visually-hidden`, `label`이 보이는 버튼. 최소 높이 44px, 배경 `--bg-card`, 테두리 `1px solid var(--field-border)`, 모서리 `--radius-lg`, 글자 `--text-main` 16px/500, 커서 pointer |
 | 선택됨 | `input:checked + label`: 테두리 `1px solid var(--accent)`, 배경 `--bg-raised`, 글자 `--text-strong` 600, 오른쪽에 `✓`(`--accent`, CSS `::after`) |
-| 포커스·비활성 | `input:focus-visible + label`: `box-shadow: 0 0 0 2px var(--focus-ring)`. `input:disabled + label`: 글자 `--color-muted`, 테두리 `--line`, 커서 `not-allowed` |
-| `.option--chip` (Q2~Q6) | 안쪽 0 16px, 내용 너비, 줄바꿈 flex(간격 `--space-xs`) |
-| `.option--tile` (Q1) | 안쪽 `--space-sm` `--space-md`, 왼쪽 정렬, 2줄: 라벨 16px/600 + 설명 14px/400 `--text-sub`. 768px 이상 2열 grid, 미만 1열 |
+| 포커스·비활성 | `input:focus-visible + label`: `box-shadow: 0 0 0 2px var(--focus-ring)`. `input:disabled + label`: 글자 `--color-muted`, 테두리 `--line`, 커서 `not-allowed`. 타일의 제목·설명 글자도 `--color-muted`로 흐리게 |
+| `.option-label--chip` (하나 선택 질문) | 문장형 라벨이라 **한 줄에 하나, 너비 100%**, 안쪽 8px 16px, `justify-content: space-between`(✓가 오른쪽 끝). `.options`(타일 아님)는 세로 flex, 간격 `--space-xs` |
+| `.option-label--tile` (몰입 순간 `flow`) | 안쪽 `--space-sm` `--space-md`, 왼쪽 정렬, 2줄: 라벨 16px/600 + 설명 14px/400 `--text-sub`. 768px 이상 2열 grid, 미만 1열 |
 | 입력창 `.textarea`, `.input` | 너비 100%, 배경 `--bg-inset`(어두운 테마) / `--bg-card`(밝은 테마), 글자 `--text-main`, 테두리 `1px solid var(--field-border)`, 모서리 `--radius-field`, 안쪽 10px 16px, 높이 40px 이상(`textarea`는 rows 기준). placeholder `--text-sub`. 포커스: 테두리 `--focus-ring` + `box-shadow: 0 0 0 2px var(--focus-ring)`. 오류(`aria-invalid="true"`): 테두리 `--caution` |
 | `.counter` | 12px/500 `--text-sub` `tabular-nums`, 오른쪽 정렬. `.counter--over`: `--caution`, 600 |
 | `.field-error` | 14px/600 `--text-main`, 앞에 `!` 아이콘(16px 원 `--caution` + `--on-accent` 글자, CSS `::before`) |
@@ -310,7 +360,10 @@
 | 마음 건강 `.wellbeing` | `.card` + 왼쪽 3px `--focus-ring`(info 파랑) 띠. 링크는 `--accent` 600 밑줄 (Binance `text-link`) |
 | 유형 카드 `.type-card` ★ | Binance "FUNDS ARE SAFU" 밴드처럼. 배경 `--bg-card`, 모서리 `--radius-xl`, 안쪽 `--space-lg`, 위쪽 4px `--accent` 띠(`border-top`). `.type-card__name` `--text-display-sm`/700 **`--accent`**. 768px 이상 사이드바에서는 28px. `.type-card__summary` 16px/400 `--text-main`. 키워드 `li`: 배경 `--bg-raised`, 글자 `--text-sub` 12px/500, `--radius-sm`, 안쪽 4px 8px, 앞에 `#` |
 | `.badge` | 배경 `--bg-raised`, 글자 `--text-sub`, 12px/500, `--radius-sm`, 안쪽 4px 8px. `.badge--featured`(유형 표시): 테두리 `1px solid var(--accent)`, 글자 `--accent`, 배경 없음, `align-self: flex-start` |
-| 추천 카드 `.activity-card` | 배경 `--bg-card`, 모서리 `--radius-xl`, 안쪽 `--space-lg`, 세로 flex 간격 `--space-sm`. 구역 사이 1px `--line` 구분선(비용 아래, 팁 아래). `.activity-card__name` 20px/600 `--text-strong` |
+| 방향 카드 `.direction` ★ | `.card` + 왼쪽 3px `--accent` 띠. `.direction__text` 16px/400 `--text-main` 줄 간격 1.7. `.direction__subtitle` 14px/600 `--text-sub`. 분야 `.direction__field`: 배경 `--bg-inset`, `--radius-lg`, 안쪽 `--space-sm` `--space-md`; 이름 16px/700 **`--accent`**, 이유 14px `--text-main`. 768px 이상 `repeat(auto-fit, minmax(180px, 1fr))` grid, 미만 1열 |
+| 트랙 배지 `.js-track` | `.badge--featured`(노랑 테두리·노랑 글자). 카드 배지 중 맨 앞. 배지 묶음은 줄바꿈 허용 |
+| `.discover` | 왼쪽 2px `--accent` 띠, 왼쪽 안쪽 `--space-sm`. 라벨 12px/600 `--accent`, 본문 14px `--text-main` |
+| 추천 카드 `.activity-card` | 투표 전에도 왼쪽 3px 투명 띠(투표해도 내용이 밀리지 않게). 배경 `--bg-card`, 모서리 `--radius-xl`, 안쪽 `--space-lg`, 세로 flex 간격 `--space-sm`. 구역 사이 1px `--line` 구분선(비용 아래, 팁 아래). `.activity-card__name` 20px/600 `--text-strong` |
 | 비용 `.cost` | Binance `stat-callout`. `.cost__caption` 12px/500 `--text-sub`, `.cost__value` 20px/700 **`--accent`** `tabular-nums` |
 | `.first-step` | 배경 `--bg-inset`, `--radius-lg`, 안쪽 `--space-sm` `--space-md`. 라벨 12px/500 `--text-sub`, 본문 16px/400 `--text-main` |
 | `.activity-card__tip` | 14px/400 `--text-sub`, 앞에 `팁 · ` (JS). 없으면 `hidden` |
@@ -321,7 +374,9 @@
 | 결과 버튼 묶음 `.result-actions` | `.card`, 세로 flex 간격 `--space-xs`. 다른 추천 받기·결과 복사하기 = `.btn--secondary`, 처음부터 다시 = `.btn--text` |
 | `.copy-status` | 비어 있으면 높이 0. 글자가 있으면 14px/500 `--text-main`, 앞에 `✓`(`--accent`). **초록 쓰지 않음** |
 | `.more-loading` | 가로 flex 간격 `--space-xs`, 14px/500 `--text-sub` |
-| 체크리스트 `.checklist` (밝은 테마) | Binance `steps-card`. 항목: 배경 `--bg-inset`, `--radius-lg`, 안쪽 `--space-md`. 체크박스 20px, `accent-color: var(--color-ink)`. 단계 이름 16px/600 `--text-strong`, 내용 16px/400 `--text-main` |
+| 체크리스트 `.checklist` (밝은 테마) | Binance `steps-card`. 항목: 배경 `--bg-inset`, `--radius-lg`, 안쪽 `--space-md`. 항목 안은 `label.checklist__label`(가로 flex)로 감싸 글자를 눌러도 체크됨. 체크박스 20px, `accent-color: var(--color-ink)`. 단계 이름 16px/600 `--text-strong`, 내용 16px/400 `--text-main`. 체크하면 내용에 취소선 + `--text-sub` |
+| `.plan-discover` (밝은 테마) | `.card` + 왼쪽 3px `--accent-active` 띠. 본문 16px `--text-main` |
+| `.next-step` | 1px 점선 `--field-border`, `--radius-lg`, 안쪽 `--space-sm` `--space-md`. 라벨 14px/600 `--text-strong` 앞에 `→`, 본문 14px `--text-main` |
 | `.datetime` | 768px 이상 2열 grid, 미만 1열, 간격 `--space-sm`. `.field__label` 14px/600 `--text-strong` |
 | `.plan-actions` | 세로 flex, 간격 `--space-xs`. `#gcal-link`는 `.btn--secondary` |
 | 푸터 `.site-footer` | **항상 밝게**(Binance `footer-light`). 배경 `--footer-bg`, 글자 `--footer-text` 12px/400, 위 1px `--color-hairline-on-light`, 안쪽 `--space-xl` 0 |

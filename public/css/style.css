@@ -441,7 +441,17 @@ main.container {
 }
 
 .option-label--chip {
-  padding: 0 var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+}
+
+/* 칩 선택지는 문장형 라벨이라 한 줄에 하나씩, 너비를 꽉 채워 보여줌 (줄바꿈이 들쭉날쭉해지지 않게) */
+.options:not(.options--tiles) {
+  flex-direction: column;
+}
+
+.options:not(.options--tiles) .option-label--chip {
+  width: 100%;
+  justify-content: space-between;
 }
 
 .option-label--tile {
@@ -501,6 +511,12 @@ main.container {
   color: var(--color-muted);
   border-color: var(--line);
   cursor: not-allowed;
+}
+
+/* 2개를 이미 고른 뒤 남은 타일은 흐리게 보여 '더 못 고른다'는 걸 알려줌 */
+.quiz-option-input:disabled + .option-label--tile .tile-title,
+.quiz-option-input:disabled + .option-label--tile .tile-desc {
+  color: var(--color-muted);
 }
 
 /* 입력창 */
@@ -757,7 +773,9 @@ main.container {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  transition: border-left 0.15s;
+  /* 투표 전에도 같은 두께의 투명 띠를 두어, 투표해도 카드 안 내용이 옆으로 밀리지 않게 함 */
+  border-left: 3px solid transparent;
+  transition: border-color 0.15s;
 }
 
 .activity-card[data-vote="hot"] {
@@ -770,6 +788,7 @@ main.container {
 
 .activity-card__badges {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-xs);
 }
 
@@ -925,9 +944,19 @@ main.container {
   background-color: var(--bg-inset);
   border-radius: var(--radius-lg);
   padding: var(--space-md);
+}
+
+/* 글자를 눌러도 체크되도록 label 전체를 누를 수 있게 함 */
+.checklist__label {
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.checklist__label input:checked + .checklist__content .checklist__step-text {
+  text-decoration: line-through;
+  color: var(--text-sub);
 }
 
 .checklist__item input[type="checkbox"] {
@@ -998,4 +1027,129 @@ main.container {
   font-size: var(--text-caption);
   color: var(--footer-text);
   line-height: 1.6;
+}
+
+/* =========================================================
+   방향 설명 (결과 화면) — 왜 이 방향인지 + 눈여겨볼 분야
+   ========================================================= */
+.direction {
+  border-left: 3px solid var(--accent);
+  gap: var(--space-sm);
+}
+
+.direction__text {
+  font-size: var(--text-body-lg);
+  color: var(--text-main);
+  line-height: 1.7;
+}
+
+.direction__fields-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.direction__subtitle {
+  font-size: var(--text-body-md);
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+.direction__fields {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-xs);
+}
+
+@media (min-width: 768px) {
+  .direction__fields {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+.direction__field {
+  background-color: var(--bg-inset);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.direction__field-name {
+  font-size: var(--text-title-sm);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.direction__field-why {
+  font-size: var(--text-body-md);
+  color: var(--text-main);
+}
+
+/* 결과 화면 메인 열: 방향 카드와 추천 카드 사이 간격 */
+.result-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* =========================================================
+   추천 카드 — 해보면 알 수 있는 것
+   ========================================================= */
+.discover {
+  border-left: 2px solid var(--accent);
+  padding-left: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.discover__label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.discover__text {
+  font-size: var(--text-body-md);
+  color: var(--text-main);
+}
+
+/* =========================================================
+   계획 화면 — 확인할 것 / 잘 맞는다면 다음 단계
+   ========================================================= */
+.plan-discover {
+  border-left: 3px solid var(--accent-active);
+  gap: var(--space-xs);
+}
+
+.plan-discover__text {
+  font-size: var(--text-body-lg);
+  color: var(--text-main);
+}
+
+.next-step {
+  border: 1px dashed var(--field-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.next-step__label {
+  font-size: var(--text-body-md);
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.next-step__label::before {
+  content: '→ ';
+}
+
+.next-step__text {
+  font-size: var(--text-body-md);
+  color: var(--text-main);
 }

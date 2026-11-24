@@ -1,4 +1,4 @@
-import { QUESTIONS, MAX_NOTE_LENGTH, MAX_MOOD, MAX_PREVIOUS, STEP_LABELS } from './content.js';
+import { QUESTIONS, QUESTION_COUNT, MAX_NOTE_LENGTH, MAX_FLOW, MAX_PREVIOUS, STEP_LABELS, createEmptyAnswers } from './content.js';
 import { buildIcs, buildGoogleCalendarUrl, buildResultText as buildCalendarResultText, buildPlanText as buildCalendarPlanText } from './calendar.js';
 
 const API_URL = '/api/recommend';
@@ -36,14 +36,15 @@ const RETRYABLE_CODES = [
 
 const LOADING_MESSAGES = [
   '답변을 살펴보고 있어요',
-  '끌릴 만한 활동을 고르고 있어요',
+  '나에게 맞는 방향을 정리하고 있어요',
+  '확인해 볼 경험을 고르고 있어요',
   '첫 걸음을 작게 쪼개고 있어요'
 ];
 
 const state = {
   view: 'intro',
   step: 0,
-  answers: { mood: [], company: null, place: null, energy: null, budget: null, time: null, note: '' },
+  answers: createEmptyAnswers(),
   profile: null,
   activities: [],
   votes: {},
@@ -93,9 +94,10 @@ export function renderQuestion() {
   const noteCountEl = document.getElementById('note-count');
   const noteErrorEl = document.getElementById('note-error');
 
-  stepEl.textContent = `${state.step + 1} / 7`;
+  stepEl.textContent = `${state.step + 1} / ${QUESTION_COUNT}`;
+  progressEl.setAttribute('aria-valuemax', String(QUESTION_COUNT));
   progressEl.setAttribute('aria-valuenow', String(state.step + 1));
-  progressFillEl.style.width = `${((state.step + 1) / 7) * 100}%`;
+  progressFillEl.style.width = `${((state.step + 1) / QUESTION_COUNT) * 100}%`;
 
   titleEl.textContent = q.title;
   hintEl.textContent = q.hint;
@@ -176,7 +178,7 @@ function updateMultiOptionsDisabled(q) {
   const optionsEl = document.getElementById('quiz-options');
   const inputs = Array.from(optionsEl.querySelectorAll('input[type="checkbox"]'));
   const checked = inputs.filter((i) => i.checked);
-  const maxReached = checked.length >= MAX_MOOD;
+  const maxReached = checked.length >= MAX_FLOW;
 
   for (const input of inputs) {
     if (!input.checked) {
@@ -191,7 +193,7 @@ export function handleOptionChange(q, input) {
   if (q.type === 'multi') {
     let arr = Array.isArray(state.answers[q.id]) ? [...state.answers[q.id]] : [];
     if (input.checked) {
-      if (!arr.includes(input.value) && arr.length < MAX_MOOD) {
+      if (!arr.includes(input.value) && arr.length < MAX_FLOW) {
         arr.push(input.value);
       }
     } else {
@@ -247,7 +249,7 @@ export function updateNextButton() {
 
 export function goNext(e) {
   if (e) e.preventDefault();
-  if (state.step < 6) {
+  if (state.step < QUESTION_COUNT - 1) {
     state.step += 1;
     renderQuestion();
     document.getElementById('quiz-title').focus();
@@ -313,10 +315,8 @@ export async function requestMoreRecommendation() {
   copyBtn.disabled = true;
   chooseBtns.forEach((b) => (b.disabled = true));
 
-  const previous = state.seen.map((item) => ({
-    name: item.name,
-    vote: state.votes[item.id] || item.vote || 'none'
-  }));
+  // 지금까지 본 활동과 그때 누른 투표를 함께 보냄 (투표는 handleVote가 seen에 기록해 둠)
+  const previous = state.seen.map((item) => ({ name: item.name, vote: item.vote }));
 
   try {
     const data = await callApi({ answers: state.answers, previous });
@@ -396,8 +396,9 @@ export function isValidResult(result) {
 }
 
 export function addToSeen(list) {
+  // 활동 id(a1~a3)는 추천을 새로 받을 때마다 다시 쓰이므로, 이름으로 구분해 기록합니다.
   for (const act of list) {
-    state.seen.push({ id: act.id, name: act.name, vote: 'none' });
+    state.seen.push({ name: act.name, vote: 'none' });
   }
   while (state.seen.length > MAX_PREVIOUS) {
     state.seen.shift();
@@ -419,6 +420,8 @@ export function renderResult(data) {
     }
   }
 
+  renderDirection(profile);
+
   const wellbeingNotice = document.getElementById('wellbeing-notice');
   wellbeingNotice.hidden = !(data.result.wellbeingConcern === true);
 
@@ -426,6 +429,29 @@ export function renderResult(data) {
   mockBadge.hidden = !(data.meta?.mock === true);
 
   renderActivities();
+}
+
+// 방향 설명 카드: 왜 이 방향인지 + 눈여겨볼 분야
+export function renderDirection(profile) {
+  document.getElementById('direction-text').textContent = profile.direction || '';
+
+  const fields = Array.isArray(profile.fields) ? profile.fields : [];
+  const listEl = document.getElementById('direction-fields');
+  listEl.replaceChildren();
+  for (const field of fields) {
+    const li = document.createElement('li');
+    li.className = 'direction__field';
+    const name = document.createElement('strong');
+    name.className = 'direction__field-name';
+    name.textContent = field.name;
+    const why = document.createElement('span');
+    why.className = 'direction__field-why';
+    why.textContent = field.why;
+    li.appendChild(name);
+    li.appendChild(why);
+    listEl.appendChild(li);
+  }
+  document.getElementById('direction-fields-wrap').hidden = fields.length === 0;
 }
 
 export function renderActivities() {
@@ -447,10 +473,12 @@ export function renderActivities() {
     nameEl.id = `name-${act.id}`;
     li.setAttribute('aria-labelledby', nameEl.id);
 
+    clone.querySelector('.js-track').textContent = act.trackLabel;
     clone.querySelector('.js-category').textContent = act.categoryLabel;
     clone.querySelector('.js-difficulty').textContent = act.difficultyLabel;
     clone.querySelector('.js-cost').textContent = act.costLabel;
     clone.querySelector('.js-reason').textContent = act.reason;
+    clone.querySelector('.js-discover').textContent = act.discover;
     clone.querySelector('.js-today').textContent = act.steps.today;
 
     const tipEl = clone.querySelector('.js-tip');
@@ -481,6 +509,17 @@ export function handleVote(actId, type) {
   const next = current === type ? 'none' : type;
   state.votes[actId] = next;
 
+  // 다른 추천을 받을 때 이 투표가 반영되도록, 지금 보이는 활동의 seen 기록에도 남깁니다.
+  const activity = state.activities.find((a) => a.id === actId);
+  if (activity) {
+    for (let i = state.seen.length - 1; i >= 0; i -= 1) {
+      if (state.seen[i].name === activity.name) {
+        state.seen[i].vote = next;
+        break;
+      }
+    }
+  }
+
   const card = document.querySelector(`.activity-card[data-id="${actId}"]`);
   if (!card) return;
 
@@ -505,11 +544,15 @@ export function openPlan(activity) {
     const li = document.createElement('li');
     li.className = 'checklist__item';
 
+    // label로 감싸야 글자를 눌러도 체크되고, 화면낭독기가 체크박스 이름을 읽어 줍니다.
+    const label = document.createElement('label');
+    label.className = 'checklist__label';
+
     const chk = document.createElement('input');
     chk.type = 'checkbox';
     chk.id = `step-chk-${key}`;
 
-    const contentDiv = document.createElement('div');
+    const contentDiv = document.createElement('span');
     contentDiv.className = 'checklist__content';
 
     const labelSpan = document.createElement('span');
@@ -523,10 +566,14 @@ export function openPlan(activity) {
     contentDiv.appendChild(labelSpan);
     contentDiv.appendChild(textSpan);
 
-    li.appendChild(chk);
-    li.appendChild(contentDiv);
+    label.appendChild(chk);
+    label.appendChild(contentDiv);
+    li.appendChild(label);
     stepsList.appendChild(li);
   });
+
+  document.getElementById('plan-discover').textContent = activity.discover;
+  document.getElementById('plan-next').textContent = activity.nextIf;
 
   const planTip = document.getElementById('plan-tip');
   if (activity.tip) {
@@ -595,6 +642,8 @@ export function updateGoogleLink() {
   gcalLink.href = buildGoogleCalendarUrl({
     name: state.selected.name,
     steps: state.selected.steps,
+    discover: state.selected.discover,
+    nextIf: state.selected.nextIf,
     start: date,
     durationMin: EVENT_DURATION_MIN
   });
@@ -607,6 +656,8 @@ export function downloadIcs() {
   const icsString = buildIcs({
     name: state.selected.name,
     steps: state.selected.steps,
+    discover: state.selected.discover,
+    nextIf: state.selected.nextIf,
     start: date,
     durationMin: EVENT_DURATION_MIN,
     uid: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
@@ -651,6 +702,8 @@ export function buildPlanText() {
   return buildCalendarPlanText({
     name: state.selected.name,
     steps: state.selected.steps,
+    discover: state.selected.discover,
+    nextIf: state.selected.nextIf,
     date
   });
 }
@@ -683,7 +736,7 @@ export function renderErrorView(error) {
 
 export function restart() {
   state.step = 0;
-  state.answers = { mood: [], company: null, place: null, energy: null, budget: null, time: null, note: '' };
+  state.answers = createEmptyAnswers();
   state.profile = null;
   state.activities = [];
   state.votes = {};
@@ -695,7 +748,7 @@ export function restart() {
 
 export function init() {
   document.getElementById('start-button').addEventListener('click', () => {
-    state.answers = { mood: [], company: null, place: null, energy: null, budget: null, time: null, note: '' };
+    state.answers = createEmptyAnswers();
     state.step = 0;
     renderQuestion();
     showView('quiz');
@@ -707,7 +760,7 @@ export function init() {
 
   document.getElementById('error-retry').addEventListener('click', requestFirstRecommendation);
   document.getElementById('error-edit').addEventListener('click', () => {
-    state.step = 6;
+    state.step = QUESTION_COUNT - 1;
     renderQuestion();
     showView('quiz');
   });

@@ -8,7 +8,7 @@
 ## 1. 상수
 
 ```js
-import { QUESTIONS, MAX_NOTE_LENGTH, MAX_MOOD, MAX_PREVIOUS, STEP_LABELS } from './content.js';
+import { QUESTIONS, QUESTION_COUNT, MAX_NOTE_LENGTH, MAX_FLOW, MAX_PREVIOUS, STEP_LABELS, createEmptyAnswers } from './content.js';
 import { buildIcs, buildGoogleCalendarUrl } from './calendar.js';
 
 const API_URL = '/api/recommend';
@@ -24,8 +24,8 @@ const EVENT_DURATION_MIN = 60;      // 캘린더 일정 길이
 ```js
 const state = {
   view: 'intro',          // intro | quiz | loading | error | result | plan
-  step: 0,                // 질문 번호 0~6
-  answers: { mood: [], company: null, place: null, energy: null, budget: null, time: null, note: '' },
+  step: 0,                // 질문 번호 0 ~ QUESTION_COUNT-1 (지금은 0~10)
+  answers: createEmptyAnswers(),  // content.js가 질문 목록으로 만들어 줌 (multi → [], single → null, text → '')
   profile: null,          // 첫 결과의 유형 (다른 추천을 받아도 유지)
   activities: [],         // 지금 보이는 활동 3개
   votes: {},              // { 활동id: 'hot' | 'cold' }
@@ -50,22 +50,22 @@ const state = {
 ### 4-2. 질문 그리기 — `renderQuestion()`
 | 대상 | 값 |
 |---|---|
-| `#quiz-step` | `` `${step + 1} / 7` `` |
-| `#quiz-progress` | `aria-valuenow = step + 1`, `#quiz-progress-fill.style.width = ((step+1)/7*100)%` |
+| `#quiz-step` | `` `${step + 1} / ${QUESTION_COUNT}` `` |
+| `#quiz-progress` | `aria-valuemax = QUESTION_COUNT`, `aria-valuenow = step + 1`, `#quiz-progress-fill.style.width = ((step+1)/QUESTION_COUNT*100)%` |
 | `#quiz-title`, `#quiz-hint` | 질문의 `title`, `hint` |
 | `#quiz-options` | `replaceChildren()` 후 선택지마다 `input` + `label` 생성. `type`이 `multi`면 checkbox, `single`이면 radio(`name`=질문 id). 클래스 `option option--tile` 또는 `option option--chip`. `id`는 `opt-{질문id}-{선택지id}`. 저장된 답이면 `checked` |
-| `#quiz-note-field` | Q7(`note`)에서만 보임. 그 외 질문에서는 `#quiz-options` 보임 |
+| `#quiz-note-field` | 마지막 질문(`note`, `type: 'text'`)에서만 보임. 그 외 질문에서는 `#quiz-options` 보임 |
 | `#quiz-prev` | 항상 보임. Q1에서 누르면 시작 화면으로 |
-| `#quiz-next` | Q1~Q6: "다음". Q7: 입력 없으면 "건너뛰고 추천 받기", 있으면 "추천 받기" |
+| `#quiz-next` | 선택 질문: "다음". 마지막(`note`): 입력 없으면 "건너뛰고 추천 받기", 있으면 "추천 받기" |
 
 ### 4-3. 답 고르기
 - radio 변경 → `state.answers[질문id] = 값`.
 - checkbox 변경 → 배열에 추가/제거. **2개가 선택되면 나머지 체크박스는 `disabled`**, 1개 이하가 되면 다시 사용 가능.
-- `#quiz-next`는 현재 질문에 답이 없으면 `disabled` (Q1: 1개 이상, Q2~Q6: 값 있음, Q7: 항상 사용 가능. 단 300자 초과 시 `disabled`).
-- Q7 `input` 이벤트: `state.answers.note = value`, `#note-count` = `` `${value.trim().length} / 300자` ``, 300 초과면 `.counter--over` + `#note-error`에 "자유 입력은 300자까지 쓸 수 있어요." + `aria-invalid="true"`.
+- `#quiz-next`는 현재 질문에 답이 없으면 `disabled` (`multi`: 1개 이상, `single`: 값 있음, `text`: 항상 사용 가능. 단 300자 초과 시 `disabled`).
+- `note` `input` 이벤트: `state.answers.note = value`, `#note-count` = `` `${value.trim().length} / 300자` ``, 300 초과면 `.counter--over` + `#note-error`에 "자유 입력은 300자까지 쓸 수 있어요." + `aria-invalid="true"`.
 
 ### 4-4. 다음 / 이전
-- `#quiz-form` `submit`(= 다음 버튼, 엔터) → `event.preventDefault()`. Q1~Q6이면 `step + 1` 후 `renderQuestion()`, `#quiz-title`에 포커스. Q7이면 `requestFirstRecommendation()`.
+- `#quiz-form` `submit`(= 다음 버튼, 엔터) → `event.preventDefault()`. 마지막 질문이 아니면 `step + 1` 후 `renderQuestion()`, `#quiz-title`에 포커스. 마지막(`step === QUESTION_COUNT - 1`)이면 `requestFirstRecommendation()`.
 - `#quiz-prev` → Q1이면 `showView('intro')`, 아니면 `step - 1`. **답은 지우지 않습니다.**
 
 ### 4-5. 첫 추천 — `requestFirstRecommendation()`
@@ -83,7 +83,7 @@ const state = {
    finally: 로딩 문구 순환 중지, state.busy = false
 ```
 - `#error-retry` → 같은 답변으로 `requestFirstRecommendation()`. 다시 시도 불가 오류면 버튼을 숨김.
-- `#error-edit` → `state.step = 6`, `renderQuestion()`, `showView('quiz')`.
+- `#error-edit` → `state.step = QUESTION_COUNT - 1`, `renderQuestion()`, `showView('quiz')`.
 
 ### 4-6. 다른 추천 — `requestMoreRecommendation()`
 ```
@@ -98,18 +98,20 @@ const state = {
    catch: 기존 카드 유지. #result-inline-error 보임 + 메시지. 다시 시도 가능하면 #result-retry 보임
    finally: #more-loading 숨김, 버튼 다시 사용 가능, busy = false
 ```
-- `addToSeen(list)`: 이름을 `seen` 끝에 추가하고, 9개를 넘으면 앞(오래된 것)부터 지움. 투표는 요청 시점에 `votes`에서 읽어 반영(4-8).
+- `addToSeen(list)`: `{ name, vote: 'none' }`을 `seen` 끝에 추가하고, 9개를 넘으면 앞(오래된 것)부터 지움.
+- 투표 기록: 활동 `id`(a1~a3)는 추천을 받을 때마다 다시 쓰이므로 `seen`은 **이름**으로 구분합니다. `handleVote`가 투표할 때마다 `seen`에서 같은 이름의 마지막 항목 `vote`를 바꾸고, 다른 추천 요청 시 `previous = seen.map(({ name, vote }) => ({ name, vote }))`를 그대로 보냅니다. (예전 라운드 투표도 유지됨)
 
 ### 4-7. 서버 호출 — `callApi(body)`
 `AbortController`로 35초 제한 → 실패 시 `CLIENT_TIMEOUT`, `fetch` 실패는 `NETWORK_ERROR`, JSON이 아니면 `UNKNOWN_ERROR`, `ok !== true`면 서버의 `error.code / message / retryable`로 오류를 던집니다.
 응답 확인 `isValidResult`: `profile.typeName`이 문자열, `activities`가 길이 3 배열이고 각 항목에 `id`, `name`, `steps.today/thisWeek/twoWeeks`가 있으면 통과. 아니면 `UNKNOWN_ERROR`.
 
 ### 4-8. 결과 그리기 — `renderResult(data)`, `renderActivities()`
-- 유형: `#type-name`, `#type-summary` 글자, `#type-keywords`는 `li`마다 `` `#${keyword}` ``.
+- 유형: `#type-name`, `#type-summary` 글자, `#type-keywords`는 `li`마다 키워드(`#`은 CSS `::before`로 붙임).
+- 방향 카드 `renderDirection(profile)`: `#direction-text` = `direction`. `#direction-fields`는 분야마다 `li.direction__field > strong.direction__field-name(name) + span.direction__field-why(why)`. 분야가 0개면 `#direction-fields-wrap` 숨김. (다른 추천에서는 바꾸지 않음)
 - `#wellbeing-notice`: `result.wellbeingConcern === true`면 보임. (다른 추천에서는 바꾸지 않음)
 - `#mock-badge`: `meta.mock === true`면 보임.
 - 활동 카드: `#activity-template`을 `content.cloneNode(true)`로 복제 → `js-*` 요소에 `textContent`:
-  `js-category` = `categoryLabel`, `js-difficulty` = `difficultyLabel`, `js-name` = `name`, `js-cost` = `costLabel`, `js-reason` = `reason`, `js-today` = `steps.today`, `js-tip` = `` `팁 · ${tip}` `` (tip이 `null`이면 숨김).
+  `js-track` = `trackLabel`, `js-category` = `categoryLabel`, `js-difficulty` = `difficultyLabel`, `js-name` = `name`, `js-cost` = `costLabel`, `js-reason` = `reason`, `js-discover` = `discover`, `js-today` = `steps.today`, `js-tip` = `` `팁 · ${tip}` `` (tip이 `null`이면 숨김).
   `li`에 `data-id = id`. 이름 요소에 `id = name-{id}`를 주고 `li`에 `aria-labelledby` 연결.
 - 끌림 투표: `js-vote-up`(▲ 끌려요) 클릭 → 이미 `hot`이면 취소(none), 아니면 `hot`. `js-vote-down`(▼ 별로예요)은 `cold`로 같은 방식. `state.votes[id]` 갱신, 두 버튼의 `aria-pressed`, `li.dataset.vote` 갱신.
 - `js-choose` 클릭 → `openPlan(activity)`.
@@ -117,7 +119,9 @@ const state = {
 ### 4-9. 계획 화면 — `openPlan(activity)`
 - `state.selected = activity`, `#plan-title` = `` `${name}, 이렇게 시작해요` ``.
 - `#plan-steps`: `today`, `thisWeek`, `twoWeeks` 순서로 `li > label > input[type=checkbox] + span(단계 라벨) + span(내용)`. 체크는 화면에서만 유지.
+- `#plan-discover` = `discover` (이 경험으로 확인할 것), `#plan-next` = `nextIf` (잘 맞는다면, 그다음엔).
 - `#plan-tip`: 팁이 있으면 `팁 · …`, 없으면 숨김.
+- `.ics`·Google 캘린더 링크·계획 복사에는 `discover`, `nextIf`도 함께 넘깁니다 (`06` 문서).
 - 날짜·시간 기본값: **내일 19:00** (로컬 시각). `#plan-date.min` = 오늘(`YYYY-MM-DD`).
 - `showView('plan')`. `#plan-back` → `showView('result')` (카드·투표 그대로).
 
@@ -141,4 +145,4 @@ const state = {
 - 답변을 URL 주소(쿼리)에 넣지 않기 (Google 캘린더 링크는 활동 이름·첫 걸음만 담음)
 
 ## 6. 함수 목록 (이름 고정)
-`init`, `showView`, `renderQuestion`, `handleOptionChange`, `handleNoteInput`, `updateNextButton`, `goNext`, `goPrev`, `requestFirstRecommendation`, `requestMoreRecommendation`, `callApi`, `isValidResult`, `addToSeen`, `renderResult`, `renderActivities`, `handleVote`, `openPlan`, `readPlanDate`, `updateGoogleLink`, `downloadIcs`, `copyText`, `buildResultText`, `buildPlanText`, `startLoadingMessages`, `stopLoadingMessages`, `renderErrorView`, `restart`.
+`init`, `showView`, `renderQuestion`, `handleOptionChange`, `handleNoteInput`, `updateNextButton`, `goNext`, `goPrev`, `requestFirstRecommendation`, `requestMoreRecommendation`, `callApi`, `isValidResult`, `addToSeen`, `renderResult`, `renderDirection`, `renderActivities`, `handleVote`, `openPlan`, `readPlanDate`, `updateGoogleLink`, `downloadIcs`, `copyText`, `buildResultText`, `buildPlanText`, `startLoadingMessages`, `stopLoadingMessages`, `renderErrorView`, `restart`.

@@ -15,11 +15,15 @@
 | 알림 | 시작 30분 전 |
 | 메모 | 아래 형식 |
 
-메모 형식 (줄바꿈 `\n`):
+메모 형식 (줄바꿈 `\n`). `확인할 것`·`다음 단계` 줄은 값이 있을 때만 넣습니다 (v1.1):
 ```
 오늘: {steps.today}
 이번 주: {steps.thisWeek}
 2주 안: {steps.twoWeeks}
+
+확인할 것: {discover}
+
+다음 단계: {nextIf}
 
 완벽하게 말고, 일단 10분만 해봐요.
 ```
@@ -67,10 +71,19 @@ export function foldIcsLine(line) {
   return parts.join('\r\n ');
 }
 
-export function buildEventText({ name, steps }) {
+// discover(확인할 것)·nextIf(잘 맞으면 다음 단계)는 있을 때만 메모에 넣음
+export function buildEventText({ name, steps, discover = '', nextIf = '' }) {
+  const lines = [
+    `오늘: ${steps.today}`,
+    `이번 주: ${steps.thisWeek}`,
+    `2주 안: ${steps.twoWeeks}`,
+  ];
+  if (discover) lines.push('', `확인할 것: ${discover}`);
+  if (nextIf) lines.push('', `다음 단계: ${nextIf}`);
+  lines.push('', '완벽하게 말고, 일단 10분만 해봐요.');
   return {
     title: `[해볼까] ${name} 해보기`,
-    details: `오늘: ${steps.today}\n이번 주: ${steps.thisWeek}\n2주 안: ${steps.twoWeeks}\n\n완벽하게 말고, 일단 10분만 해봐요.`,
+    details: lines.join('\n'),
   };
 }
 
@@ -114,9 +127,51 @@ export function buildGoogleCalendarUrl(event) {
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
+
+export function buildResultText({ profile, activities, origin = '' }) {
+  const lines = [
+    `[해볼까] 나의 유형: ${profile.typeName}`,
+    profile.summary,
+  ];
+  if (profile.direction) {
+    lines.push('', '나에게 맞는 방향', profile.direction);
+  }
+  if (Array.isArray(profile.fields) && profile.fields.length > 0) {
+    lines.push('', '눈여겨볼 분야');
+    profile.fields.forEach((f) => lines.push(`- ${f.name}: ${f.why}`));
+  }
+  lines.push('', '추천 경험');
+  activities.forEach((act, idx) => {
+    const track = act.trackLabel ? `${act.trackLabel} · ` : '';
+    lines.push(`${idx + 1}. ${act.name} (${track}${act.categoryLabel} · ${act.costLabel})`);
+    if (act.discover) lines.push(`   해보면 알 수 있는 것: ${act.discover}`);
+    lines.push(`   오늘의 첫 걸음: ${act.steps.today}`);
+  });
+  if (origin) {
+    lines.push('');
+    lines.push(origin);
+  }
+  return lines.join('\n');
+}
+
+export function buildPlanText({ name, steps, date = null, discover = '', nextIf = '' }) {
+  const lines = [`[해볼까] ${name} 해보기`];
+  if (date instanceof Date && !isNaN(date.getTime())) {
+    const formatted = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    lines.push(`날짜: ${formatted}`);
+  }
+  lines.push(`1) 오늘: ${steps.today}`);
+  lines.push(`2) 이번 주: ${steps.thisWeek}`);
+  lines.push(`3) 2주 안: ${steps.twoWeeks}`);
+  if (discover) lines.push(`확인할 것: ${discover}`);
+  if (nextIf) lines.push(`다음 단계: ${nextIf}`);
+  return lines.join('\n');
+}
 ```
 
-`app.js`에서 부를 때: `uid`는 `crypto.randomUUID()`, `now`는 `new Date()`, `durationMin`은 `60`.
+`app.js`에서 부를 때: `uid`는 `crypto.randomUUID()`, `now`는 `new Date()`, `durationMin`은 `60`, `discover`·`nextIf`는 고른 활동의 값.
+
+---
 
 ## 3. 복사 텍스트 형식
 
@@ -125,14 +180,23 @@ export function buildGoogleCalendarUrl(event) {
 [해볼까] 나의 유형: {typeName}
 {summary}
 
-추천 활동
-1. {name} ({categoryLabel} · {costLabel})
+나에게 맞는 방향
+{direction}
+
+눈여겨볼 분야
+- {fields[0].name}: {fields[0].why}
+- …
+
+추천 경험
+1. {name} ({trackLabel} · {categoryLabel} · {costLabel})
+   해보면 알 수 있는 것: {discover}
    오늘의 첫 걸음: {steps.today}
 2. …
 3. …
 
 {location.origin}
 ```
+`direction`, `fields`가 비어 있으면 그 묶음은 빼고 씁니다.
 
 ### 계획 복사 — `buildPlanText()`
 ```
@@ -141,6 +205,8 @@ export function buildGoogleCalendarUrl(event) {
 1) 오늘: {steps.today}
 2) 이번 주: {steps.thisWeek}
 3) 2주 안: {steps.twoWeeks}
+확인할 것: {discover}
+다음 단계: {nextIf}
 ```
 날짜 표시는 `new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(date)` 결과를 그대로 씁니다 (예: `2026. 11. 24. 오후 7:00`).
 

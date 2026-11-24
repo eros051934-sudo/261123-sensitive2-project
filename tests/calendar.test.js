@@ -6,6 +6,7 @@ import {
   foldIcsLine,
   buildIcs,
   buildGoogleCalendarUrl,
+  buildEventText,
 } from '../public/js/calendar.js';
 
 const mockEvent = {
@@ -58,4 +59,16 @@ test('C-05: buildGoogleCalendarUrl', () => {
   assert.ok(url.startsWith('https://calendar.google.com/calendar/render?'));
   assert.ok(url.includes('action=TEMPLATE'));
   assert.ok(url.includes('dates=20261124T100000Z%2F20261124T110000Z'));
+});
+
+test('C-06: 확인할 것·다음 단계가 있으면 일정 메모에 들어감', () => {
+  const { details } = buildEventText({ ...mockEvent, discover: '즐거웠다면 손으로 만드는 일이 맞아요.', nextIf: '잘 맞았다면, 코스터 세트를 만들어 보세요.' });
+  assert.ok(details.includes('확인할 것: 즐거웠다면 손으로 만드는 일이 맞아요.'));
+  assert.ok(details.includes('다음 단계: 잘 맞았다면, 코스터 세트를 만들어 보세요.'));
+  assert.ok(details.endsWith('완벽하게 말고, 일단 10분만 해봐요.'));
+});
+
+test('C-07: 확인할 것·다음 단계가 없으면 예전 메모 형식 그대로', () => {
+  const { details } = buildEventText(mockEvent);
+  assert.equal(details, '오늘: 코바늘과 실 고르기\n이번 주: 사슬뜨기 연습하기\n2주 안: 첫 컵받침 완성하기\n\n완벽하게 말고, 일단 10분만 해봐요.');
 });

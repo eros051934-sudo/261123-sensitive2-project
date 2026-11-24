@@ -14,17 +14,21 @@
 ```json
 {
   "answers": {
-    "mood": ["focus", "rest"],
-    "company": "alone",
-    "place": "indoor",
-    "energy": "low",
+    "goal": "both",
+    "stage": "worker",
+    "flow": ["create", "analyze"],
+    "strength": "organize",
+    "drain": "routine",
+    "need": "clarity",
+    "env": "quiet",
+    "approach": "talk",
     "budget": "under30k",
     "time": "1to3h",
-    "note": "요즘 사진에 관심이 생겼어요."
+    "note": "마케팅에 관심이 있는데 뭐부터 할지 막막해요."
   },
   "previous": [
-    { "name": "뜨개질 컵받침 만들기", "vote": "hot" },
-    { "name": "동네 산책 사진 찍기", "vote": "cold" }
+    { "name": "관심 직무 1:1 커피챗 인터뷰", "vote": "hot" },
+    { "name": "주말 소모임 하루 참여", "vote": "cold" }
   ]
 }
 ```
@@ -32,8 +36,8 @@
 | 필드 | 규칙 | 실패 코드 |
 |---|---|---|
 | `answers` | 객체 필수 | `INVALID_REQUEST` |
-| `answers.mood` | 배열, 1~2개, 중복 없음, 모두 `content.js`의 mood 선택지 id | `INVALID_ANSWERS` |
-| `company`, `place`, `energy`, `budget`, `time` | 각 질문의 선택지 id 중 하나 | `INVALID_ANSWERS` |
+| `answers.flow` | 배열, 1~2개, 중복 없음, 모두 `content.js`의 flow 선택지 id | `INVALID_ANSWERS` |
+| `goal`, `stage`, `strength`, `drain`, `need`, `env`, `approach`, `budget`, `time` | 각 질문의 선택지 id 중 하나 (`content.js`에서 `type: 'single'`인 질문 전부) | `INVALID_ANSWERS` |
 | `answers.note` | 없으면 `''`. 문자열, 앞뒤 공백 제거 후 300자 이하 | 문자열 아님 `INVALID_ANSWERS` / 초과 `NOTE_TOO_LONG` |
 | `previous` | 없으면 `[]`. 배열, 최대 9개 | `INVALID_REQUEST` |
 | `previous[].name` | 문자열, 공백 제거 후 1~20자 | `INVALID_REQUEST` |
@@ -45,17 +49,29 @@
 {
   "ok": true,
   "result": {
-    "profile": { "typeName": "조용한 몰입 탐험가", "summary": "혼자 손을 움직이며 집중할 때 에너지가 차오르는 타입이에요.", "keywords": ["몰입", "혼자", "손으로"] },
+    "profile": {
+      "typeName": "구조를 세우는 탐색형 빌더",
+      "summary": "흩어진 생각을 정리해 눈에 보이는 결과로 만들 때 힘이 나는 사람이에요.",
+      "keywords": ["구조화", "실행력", "호기심"],
+      "direction": "정답이 정해진 일보다 문제를 정리하고 작은 결과물로 만들어 보는 일에서 힘이 나는 편이에요. 먼저 사람을 만나 실제 일을 들어 보고, 작은 결과물을 직접 만들어 보며 확인해 봐요.",
+      "fields": [
+        { "name": "서비스 기획", "why": "문제를 정리하고 해결책을 구조로 그리는 일이 강점과 맞아요." },
+        { "name": "콘텐츠 기획", "why": "아이디어를 눈에 보이는 결과물로 만드는 데서 힘이 나요." }
+      ]
+    },
     "activities": [
       {
         "id": "a1",
-        "name": "필름 감성 폰 사진 산책",
-        "category": "culture", "categoryLabel": "문화·감상",
-        "cost": "free", "costLabel": "무료",
-        "difficulty": "easy", "difficultyLabel": "바로 시작",
-        "reason": "사진에 관심이 생겼고 혼자 조용히 몰입하는 걸 좋아해서 잘 맞아요.",
-        "steps": { "today": "휴대폰 카메라 격자선을 켜고 창밖 사진 3장 찍기", "thisWeek": "동네 30분 걸으며 '빛' 주제로 10장 찍기", "twoWeeks": "가장 마음에 드는 5장을 골라 나만의 앨범 만들기" },
-        "tip": "잘 찍으려 하기보다 매일 같은 시간에 찍어 보세요."
+        "name": "관심 직무 1:1 커피챗 인터뷰",
+        "track": "career", "trackLabel": "진로 탐색",
+        "category": "social", "categoryLabel": "네트워킹·커뮤니케이션",
+        "cost": "under30k", "costLabel": "3만 원 이하",
+        "difficulty": "easy", "difficultyLabel": "가벼운 첫 걸음",
+        "reason": "막연한 직무 이미지를 실제로 그 일을 하는 사람의 하루로 바꿔 볼 수 있어요.",
+        "discover": "이야기를 듣는 동안 설렜다면 그 직무를 더 파 볼 가치가 있다는 신호예요.",
+        "steps": { "today": "궁금한 직무의 현직자 글이나 프로필 3개 찾아보기", "thisWeek": "대화 요청 메시지와 질문 5가지 써서 보내기", "twoWeeks": "30분 대화를 나누고 느낀 점을 한 페이지로 정리하기" },
+        "nextIf": "잘 맞았다면, 같은 직무의 다른 사람 1명을 더 만나 보세요.",
+        "tip": "질문을 구체적으로 준비할수록 답장 받을 확률이 높아져요."
       }
     ],
     "wellbeingConcern": false
@@ -65,6 +81,7 @@
 ```
 - `activities`는 **항상 3개**, `id`는 `a1`, `a2`, `a3`. 라벨(`...Label`)은 서버가 `content.js`로 붙입니다 (AI가 쓴 값 아님).
 - `tip`은 문자열 또는 `null`.
+- `profile.direction`(250자), `profile.fields`(0~3개, 이름 15자·이유 60자), `activities[].track`·`discover`(120자)·`nextIf`(120자)는 v1.1에서 추가. `direction`, `track`, `discover`, `nextIf`가 비어 있으면 그 결과/활동은 버립니다.
 
 ### 1-3. 실패 — `4xx`/`5xx`
 ```json
@@ -160,13 +177,16 @@ export default {
 
 ## 3. 참고 구현 — `lib/validate.js`
 
+요청 검사(`validateRequest`)와 AI 응답 정리(`normalizeAiResult`). 하나 선택 질문 목록은 `content.js`에서 자동으로 뽑으므로 질문이 바뀌어도 이 파일은 고치지 않습니다.
+
 ```js
 import {
-  QUESTIONS, MAX_NOTE_LENGTH, MAX_MOOD, MAX_PREVIOUS,
-  CATEGORY_LABELS, COST_LABELS, DIFFICULTY_LABELS,
+  QUESTIONS, MAX_NOTE_LENGTH, MAX_FLOW, MAX_PREVIOUS,
+  CATEGORY_LABELS, COST_LABELS, DIFFICULTY_LABELS, TRACK_LABELS,
 } from '../public/js/content.js';
 
-const SINGLE_IDS = ['company', 'place', 'energy', 'budget', 'time'];
+// 하나만 고르는 질문 id 목록 (content.js에서 자동으로 뽑아서, 질문이 바뀌어도 여기를 고칠 필요 없음)
+const SINGLE_IDS = QUESTIONS.filter((q) => q.type === 'single').map((q) => q.id);
 const VOTES = ['hot', 'cold', 'none'];
 const optionIds = (qid) => QUESTIONS.find((q) => q.id === qid).options.map((o) => o.id);
 
@@ -178,9 +198,9 @@ export function validateRequest(body) {
   if (!isObject(body) || !isObject(body.answers)) return { ok: false, code: 'INVALID_REQUEST' };
   const a = body.answers;
 
-  const mood = a.mood;
-  if (!Array.isArray(mood) || mood.length < 1 || mood.length > MAX_MOOD
-      || new Set(mood).size !== mood.length || !mood.every((m) => optionIds('mood').includes(m))) {
+  const flow = a.flow;
+  if (!Array.isArray(flow) || flow.length < 1 || flow.length > MAX_FLOW
+      || new Set(flow).size !== flow.length || !flow.every((m) => optionIds('flow').includes(m))) {
     return { ok: false, code: 'INVALID_ANSWERS' };
   }
   for (const id of SINGLE_IDS) {
@@ -201,7 +221,7 @@ export function validateRequest(body) {
     previous.push({ name, vote: p.vote });
   }
 
-  const answers = { mood, note };
+  const answers = { flow, note };
   for (const id of SINGLE_IDS) answers[id] = a[id];
   return { ok: true, input: { answers, previous } };
 }
@@ -216,16 +236,17 @@ const isText = (v) => typeof v === 'string' && v.trim() !== '';
 // AI 응답 검사·정리 → 정리된 result 또는 null
 export function normalizeAiResult(raw, previous = []) {
   if (!isObject(raw) || !isObject(raw.profile) || !Array.isArray(raw.activities)) return null;
-  const { typeName, summary, keywords } = raw.profile;
-  if (!isText(typeName) || !isText(summary)) return null;
+  const { typeName, summary, keywords, direction, fields } = raw.profile;
+  if (!isText(typeName) || !isText(summary) || !isText(direction)) return null;
 
   const seen = new Set(previous.map((p) => normalizeName(p.name)));
   const activities = [];
   for (const act of raw.activities) {
     if (activities.length === 3) break;
     if (!isObject(act) || !isText(act.name) || act.name.trim().length > 20) continue;
+    if (!TRACK_LABELS[act.track]) continue;
     if (!CATEGORY_LABELS[act.category] || !COST_LABELS[act.cost] || !DIFFICULTY_LABELS[act.difficulty]) continue;
-    if (!isText(act.reason) || !isObject(act.steps)) continue;
+    if (!isText(act.reason) || !isText(act.discover) || !isText(act.nextIf) || !isObject(act.steps)) continue;
     const { today, thisWeek, twoWeeks } = act.steps;
     if (![today, thisWeek, twoWeeks].every(isText)) continue;
     const key = normalizeName(act.name);
@@ -234,11 +255,14 @@ export function normalizeAiResult(raw, previous = []) {
     activities.push({
       id: `a${activities.length + 1}`,
       name: act.name.trim(),
+      track: act.track, trackLabel: TRACK_LABELS[act.track],
       category: act.category, categoryLabel: CATEGORY_LABELS[act.category],
       cost: act.cost, costLabel: COST_LABELS[act.cost],
       difficulty: act.difficulty, difficultyLabel: DIFFICULTY_LABELS[act.difficulty],
       reason: clip(act.reason, 150),
+      discover: clip(act.discover, 120),
       steps: { today: clip(today, 80), thisWeek: clip(thisWeek, 80), twoWeeks: clip(twoWeeks, 80) },
+      nextIf: clip(act.nextIf, 120),
       tip: isText(act.tip) ? clip(act.tip, 80) : null,
     });
   }
@@ -248,8 +272,26 @@ export function normalizeAiResult(raw, previous = []) {
     ? [...new Set(keywords.filter(isText).map((k) => k.trim()).filter((k) => k.length <= 10))].slice(0, 3)
     : [];
 
+  // 눈여겨볼 분야: 이름(15자)·이유(60자)가 모두 있는 것만, 이름 중복 없이 최대 3개
+  const safeFields = [];
+  if (Array.isArray(fields)) {
+    for (const f of fields) {
+      if (safeFields.length === 3) break;
+      if (!isObject(f) || !isText(f.name) || !isText(f.why)) continue;
+      const name = clip(f.name, 15);
+      if (safeFields.some((x) => x.name === name)) continue;
+      safeFields.push({ name, why: clip(f.why, 60) });
+    }
+  }
+
   return {
-    profile: { typeName: clip(typeName, 20), summary: clip(summary, 100), keywords: safeKeywords },
+    profile: {
+      typeName: clip(typeName, 20),
+      summary: clip(summary, 100),
+      keywords: safeKeywords,
+      direction: clip(direction, 250),
+      fields: safeFields,
+    },
     activities,
     wellbeingConcern: raw.wellbeingConcern === true,
   };
@@ -260,13 +302,12 @@ export function normalizeAiResult(raw, previous = []) {
 
 ## 4. 참고 구현 — `lib/mock.js`
 
-목적: 키·비용 없이 모든 화면 상태를 확인. 답변의 **첫 번째 mood 값**으로 활동 묶음을 고르고, `previous`에 있는 이름은 건너뜁니다.
+목적: 키·비용 없이 모든 화면 상태를 확인. 고정된 활동 목록에서 `previous`에 있는 이름은 건너뜁니다.
 
 - 활동 목록 `MOCK_ACTIVITIES`: 9개 (각 항목은 1-2의 활동 모양에서 `id`·라벨 제외). 에이전트 재량으로 내용을 쓰되 아래를 지킵니다.
-  - 9개 이름이 모두 다르고 20자 이하, 분류 8종 중 6종 이상 사용, 비용은 모두 `free` 또는 `under30k`
-  - 하나는 `tip: null`
+  - 9개 이름이 모두 다르고 20자 이하, `track` 3종 모두 사용, `discover`·`nextIf` 모두 채움
 - 순서: 목록을 처음부터 돌며 `previous`에 없는 것 3개 선택 → `normalizeAiResult(raw, previous)`. 3개가 안 되면 처음 3개를 고르고 `normalizeAiResult(raw, [])`로 정리.
-- 유형: `typeName: '테스트 몰입 탐험가'`, `summary: '테스트 모드 결과예요. 실제 추천은 AI가 만들어요.'`, `keywords: ['테스트', '몰입']`.
+- 유형·방향: `MOCK_PROFILE` 하나를 고정으로 씀 (`typeName`, `summary`, `keywords`, `direction`, `fields` 3개).
 - `wellbeingConcern`: `note`에 `[[wellbeing]]`가 있으면 `true`.
 - 오류 일부러 내기 (`note`에 포함 시): `[[timeout]]`→`AI_TIMEOUT`, `[[unavailable]]`→`AI_SERVICE_UNAVAILABLE`, `[[invalid]]`→`AI_RESPONSE_INVALID`, `[[quota]]`→`AI_QUOTA_EXCEEDED`, `[[rate]]`→`RATE_LIMITED`, `[[config]]`→`SERVER_CONFIG_ERROR`.
 - 700ms 기다린 뒤 응답. 함수 이름은 `mockRecommend(input)`.

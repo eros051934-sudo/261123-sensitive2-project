@@ -3,10 +3,14 @@ import assert from 'node:assert/strict';
 import handler from '../api/recommend.js';
 
 const ANSWERS = {
-  mood: ['create'],
-  company: 'clarity',
-  place: 'quiet',
-  energy: 'solo_study',
+  goal: 'both',
+  stage: 'worker',
+  flow: ['create'],
+  strength: 'organize',
+  drain: 'routine',
+  need: 'clarity',
+  env: 'quiet',
+  approach: 'solo',
   budget: 'under30k',
   time: '1to3h',
   note: ''
@@ -41,8 +45,8 @@ test('H-02: 깨진 JSON / text/plain', async () => {
   assert.equal(data.error.code, 'INVALID_REQUEST');
 });
 
-test('H-03: mood 빈 배열 400 INVALID_ANSWERS retryable false', async () => {
-  const req = makeRequest({ answers: { ...ANSWERS, mood: [] } });
+test('H-03: flow 빈 배열 400 INVALID_ANSWERS retryable false', async () => {
+  const req = makeRequest({ answers: { ...ANSWERS, flow: [] } });
   const res = await handler.fetch(req);
   assert.equal(res.status, 400);
   const data = await res.json();

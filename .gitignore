@@ -4,3 +4,8 @@ node_modules/
 .env.local
 .env*.local
 .DS_Store
+
+# 개인 작업용 파일 (GitHub에 올리지 않음)
+haebolkka-docs/
+local_dev_server.py
+/02-design-system.md
